@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UOB Nationality Data</title>
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
+    <style>
+        table {
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <main class="container">
+        <h1>University of Bahrain Student Nationality Data</h1>
+        <p>This table displays student nationality data from the University of Bahrain API.</p>
+        <button id="fetchData">Fetch Data</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>College</th>
+                    <th>Program</th>
+                    <th>Nationality</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody id="dataTable">
+                <tr>
+                    <td colspan="4" style="text-align: center;">No data yet. Click "Fetch Data" to load.</td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+
+    <script>
+        const API_URL = "https://data.gov.bh/api/explore/v2.1/catalog/datasets/01-statistics-of-students-nationalities_updated/records?where=colleges%20like%20%22IT%22%20AND%20the_programs%20like%20%22bachelor%22&limit=100";
+        const fetchDataButton = document.getElementById('fetchData');
+        const dataTable = document.getElementById('dataTable');
+
+        async function fetchAndDisplayData() {
+            try {
+                // Clear previous data
+                dataTable.innerHTML = '<tr><td colspan="4" style="text-align: center;">Loading...</td></tr>';
+
+                // Fetch API data
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const jsonData = await response.json();
+                const records = jsonData.records;
+
+                // Check if data exists
+                if (!records || records.length === 0) {
+                    dataTable.innerHTML = '<tr><td colspan="4" style="text-align: center;">No data found.</td></tr>';
+                    return;
+                }
+
+                // Render data into the table
+                const rows = records.map(record => {
+                    const fields = record.record.fields;
+                    return `
+                        <tr>
+                            <td>${fields.colleges || 'N/A'}</td>
+                            <td>${fields.the_programs || 'N/A'}</td>
+                            <td>${fields.nationality || 'N/A'}</td>
+                            <td>${fields.count || 'N/A'}</td>
+                        </tr>
+                    `;
+                });
+
+                dataTable.innerHTML = rows.join('');
+
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                dataTable.innerHTML = '<tr><td colspan="4" style="text-align: center; color: red;">Failed to fetch data. Please try again later.</td></tr>';
+            }
+        }
+
+        fetchDataButton.addEventListener('click', fetchAndDisplayData);
+    </script>
+</body>
+</html>
